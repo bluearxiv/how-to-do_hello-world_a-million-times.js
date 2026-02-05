@@ -1,2 +1,5 @@
-- テストを作成
-- CONTRIBUTION.mdを作成
+# TODO
+
+- ~~テストを作成~~ ✅
+- ~~CONTRIBUTION.mdを作成~~ ✅
+- ~~GitHub Actions (PR検証ワークフロー) を作成~~ ✅
