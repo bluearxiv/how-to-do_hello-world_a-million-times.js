@@ -87,6 +87,10 @@ npm run test:watch
 
 詳細は [CONTRIBUTING.md](./CONTRIBUTING.md) をご覧ください。
 
+## 貢献者
+
+[![Contributors](https://contrib.rocks/image?repo=otoneko1102/gomamayo.js)](https://github.com/otoneko1102/gomamayo.js/graphs/contributors)
+
 ### クイックスタート
 
 ```bash
