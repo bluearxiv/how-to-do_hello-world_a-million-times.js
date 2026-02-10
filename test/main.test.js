@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { readFileSync, statSync, readdirSync } from "fs";
 import { join } from "path";
 import { spawn } from "child_process";
@@ -12,6 +12,10 @@ const ALLOWED_FILENAMES = [
   "main.ts",
   "main.coffee",
 ];
+const ALLOWED_ADDITIONAL_FILES = ["README.md"];
+
+// README.md警告を表示済みのディレクトリを記録
+const warnedDirectories = new Set();
 
 // src/ からディレクトリを取得
 const srcDir = join(process.cwd(), "src");
@@ -44,17 +48,34 @@ function findMainFile(dirPath) {
     throw new Error(`ディレクトリ内にファイルが存在しません: ${dirPath}`);
   }
 
-  if (files.length > 1) {
+  // README.mdを除外してmainファイルをチェック
+  const mainFiles = files.filter(
+    (f) => !ALLOWED_ADDITIONAL_FILES.includes(f),
+  );
+
+  if (mainFiles.length === 0) {
+    throw new Error(`ディレクトリ内にmainファイルが存在しません: ${dirPath}`);
+  }
+
+  if (mainFiles.length > 1) {
     throw new Error(
-      `ディレクトリ内に複数のファイルが存在します: ${files.join(", ")}`,
+      `ディレクトリ内に複数のmainファイルが存在します: ${mainFiles.join(", ")}`,
     );
   }
 
-  const fileName = files[0];
+  const fileName = mainFiles[0];
   if (!ALLOWED_FILENAMES.includes(fileName)) {
     throw new Error(
       `許可されていないファイル名です: ${fileName}。許可: ${ALLOWED_FILENAMES.join(", ")}`,
     );
+  }
+
+  // README.mdの存在をチェック（警告のみ、一度だけ表示）
+  if (!files.includes("README.md") && !warnedDirectories.has(dirPath)) {
+    console.warn(
+      `⚠️  [${dirPath}] README.mdがありません。実装の説明を追加することを推奨します。`,
+    );
+    warnedDirectories.add(dirPath);
   }
 
   return fileName;
@@ -75,22 +96,23 @@ describe("Hello World 100万回出力テスト", () => {
   testTargets.forEach((target) => {
     describe(`src/${target}/`, () => {
       const dirPath = join(process.cwd(), "src", target);
-      let fileName;
-      let filePath;
-      let fileContent;
+      const fileName = findMainFile(dirPath);
+      const filePath = join(dirPath, fileName);
+      const fileContent = readFileSync(filePath, "utf-8");
 
-      beforeEach(() => {
-        fileName = findMainFile(dirPath);
-        filePath = join(dirPath, fileName);
-        fileContent = readFileSync(filePath, "utf-8");
-      });
-
-      it("ディレクトリ内に唯一のファイルが存在すること", () => {
+      it("ディレクトリ内にmainファイルとREADME.md以外のファイルが存在しないこと", () => {
         const files = readdirSync(dirPath).filter((f) => {
           const fullPath = join(dirPath, f);
           return statSync(fullPath).isFile();
         });
-        expect(files.length).toBe(1);
+        
+        const invalidFiles = files.filter(
+          (f) =>
+            !ALLOWED_FILENAMES.includes(f) &&
+            !ALLOWED_ADDITIONAL_FILES.includes(f),
+        );
+
+        expect(invalidFiles).toEqual([]);
       });
 
       it("ファイル名が許可されたもの（main.js/main.cjs/main.mjs/main.ts）であること", () => {
@@ -153,7 +175,7 @@ describe("Hello World 100万回出力テスト", () => {
 
       it('100万回 "Hello, World!" を出力すること', async () => {
         const [command, ...args] = getRunCommand(fileName);
-        const output = await new Promise((resolve, reject) => {
+        const count = await new Promise((resolve, reject) => {
           const env = { ...process.env };
           if (fileName === "main.ts") {
             env.NODE_OPTIONS = "--loader ts-node/esm";
@@ -162,13 +184,22 @@ describe("Hello World 100万回出力テスト", () => {
             shell: true,
             env,
           });
-          let stdout = "";
-          let stderr = "";
+          let total = 0;
+          let remainder = "";
+          const needle = "Hello, World!";
 
           child.stdout.on("data", (data) => {
-            stdout += data.toString();
+            const chunk = remainder + data.toString();
+            let idx = 0;
+            while ((idx = chunk.indexOf(needle, idx)) !== -1) {
+              total++;
+              idx += needle.length;
+            }
+            // 末尾にneedleの一部が残っている可能性を考慮
+            remainder = chunk.slice(-(needle.length - 1));
           });
 
+          let stderr = "";
           child.stderr.on("data", (data) => {
             stderr += data.toString();
           });
@@ -177,14 +208,10 @@ describe("Hello World 100万回出力テスト", () => {
             if (code !== 0) {
               reject(new Error(`プロセスがエラーで終了しました: ${stderr}`));
             } else {
-              resolve(stdout);
+              resolve(total);
             }
           });
         });
-
-        // "Hello, World!" の出現回数をカウント
-        const matches = output.match(/Hello, World!/g);
-        const count = matches ? matches.length : 0;
 
         expect(count).toBe(EXPECTED_COUNT);
       });
