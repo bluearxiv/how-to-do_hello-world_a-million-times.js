@@ -11,6 +11,7 @@ const ALLOWED_FILENAMES = [
   "main.mjs",
   "main.ts",
   "main.coffee",
+  "main.ls",
 ];
 const ALLOWED_ADDITIONAL_FILES = ["README.md"];
 
@@ -87,6 +88,9 @@ function getRunCommand(fileName) {
     return ["npx", "ts-node", "--esm"];
   } else if (fileName === "main.coffee") {
     return ["npx", "coffee"];
+  } else if (fileName === "main.ls") {
+    // LiveScript (lsc) を使って実行します
+    return ["npx", "lsc"];
   } else {
     return ["node"];
   }

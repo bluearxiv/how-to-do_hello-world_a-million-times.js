@@ -30,6 +30,7 @@ Linux(Ubuntu)環境を想定しています。
 - `main.mjs` - JavaScript (ESM, 明示的)
 - `main.ts` - TypeScript
 - `main.coffee` - CoffeeScript
+- `main.ls` - LiveScript
 
 ### テストの実行
 
