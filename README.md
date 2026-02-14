@@ -30,6 +30,7 @@ Linux(Ubuntu)環境を想定しています。
 - `main.mjs` - JavaScript (ESM, 明示的)
 - `main.ts` - TypeScript
 - `main.coffee` - CoffeeScript
+- `main.ls` - LiveScript
 
 ### テストの実行
 
@@ -85,6 +86,14 @@ npm test [your_method_name]
 
 > [!WARNING]
 > `src/[dirname]/main.*` と `src/[dirname]/README.md` 以外のファイルを変更するPRは自動的にクローズされます。
+
+### すべてのファイルをテストする場合
+
+ひとつのディレクトリにつき60秒の制限時間が設定されます。
+
+```bash
+npm run test:all
+```
 
 ### 貢献者
 

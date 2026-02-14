@@ -21,6 +21,7 @@ mkdir src/[your_method_name]
 - `main.mjs` - JavaScript (ESM, 明示的)
 - `main.ts` - TypeScript
 - `main.coffee` - CoffeeScript
+- `main.ls` - LiveScript
 
 > [!IMPORTANT]
 > **1つのディレクトリには1つのmainファイルと任意でREADME.mdのみ** 配置できます。
@@ -81,7 +82,7 @@ npm run test:all
 
 ### 許可される変更
 
-✅ `src/[dirname]/main.[js|cjs|mjs|ts|coffee]` の追加・編集  
+✅ `src/[dirname]/main.[js|cjs|mjs|ts|coffee|ls]` の追加・編集  
 ✅ `src/[dirname]/README.md` の追加・編集
 
 ### 禁止される変更
